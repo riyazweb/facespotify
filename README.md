@@ -1,6 +1,4 @@
 
-Here's the formatted GitHub markdown with enhanced emojis:
-
 # FaceSpotify 🎶👀🎧
 
 Welcome to **FaceSpotify**! This innovative project combines **facial recognition** with **Spotify's music streaming** to deliver a personalized listening experience tailored to your facial expressions. Let your face control the vibe! 😎🎶
