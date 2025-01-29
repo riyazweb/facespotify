@@ -16,8 +16,8 @@ if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
 # Adjust paths to your CSV and model files:
-CSV_PATH = "/content/Emotion-based-music-recommendation-system/muse_v3.csv"
-MODEL_PATH = "/content/Emotion-based-music-recommendation-system/model.h5"
+CSV_PATH = "/content/facespotify/muse_v3.csv"
+MODEL_PATH = "/content/facespotify/model.h5"
 
 # Load CSV data for recommendations
 df = pd.read_csv(CSV_PATH)
