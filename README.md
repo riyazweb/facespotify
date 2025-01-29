@@ -3,6 +3,12 @@
 
 Welcome to **FaceSpotify**! This innovative project combines **facial recognition** with **Spotify's music streaming** to deliver a personalized listening experience tailored to your facial expressions. Let your face control the vibe! 😎🎶
 
+## 🔗 Google Colab Version
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1NSPW3C_y6bbgJOoowQRDk92YQmnYXrdy?usp=sharing)  
+
+Start experimenting on Colab with one click! 🚀✨
+
 ## 🚀 Features
 
 - **Facial Recognition** 🤳: Detects facial expressions to recommend music 🎵.
@@ -35,9 +41,6 @@ python app.py
 
 2. **Follow the on-screen instructions** to authenticate with Spotify and start enjoying personalized music recommendations! 🎵🔥
 
-## 🔗 Google Colab Version
-
-Start experimenting on Colab with one click! 🚀✨
 
 ## 🤝 Contributing
 
