@@ -7,3 +7,4 @@ keras
 collection
 pyngrok
 gunicorn
+Flask
