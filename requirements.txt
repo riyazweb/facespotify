@@ -6,3 +6,4 @@ tensorflow
 keras
 collection
 pyngrok
+gunicorn
