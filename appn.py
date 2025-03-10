@@ -187,6 +187,6 @@ def save_image():
 
 if __name__ == "__main__":
     # Expose localhost:5000 via ngrok so you can access from a public URL
-    public_url = ngrok.connect(5000)
+    public_url = ngrok.connect(5000, domain="prepared-singularly-shepherd.ngrok-free.app")
     print(f"🌐 Ngrok URL: {public_url}")
     app.run(debug=False, port=5000)
