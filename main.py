@@ -10,15 +10,15 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dens
 
 app = Flask(__name__)
 
-# Create an 'uploads' folder for storing uploaded images 📁
+# 📁 Create uploads folder if it doesn't exist
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
-# Adjust paths to your CSV and model files:
+# 🔍 Set paths for CSV and model files (make sure these files are in your project)
 CSV_PATH = "muse_v3.csv"
 MODEL_PATH = "model.h5"
 
-# Load CSV data for recommendations 🎵
+# 🎵 Load CSV data for recommendations
 try:
     df = pd.read_csv(CSV_PATH)
     df['link'] = df['lastfm_url']
@@ -40,8 +40,7 @@ except Exception as e:
 
 def get_recommendations(emotion_list):
     """
-    Given an emotion list (e.g. ["Happy"]), return up to 30 samples
-    from the relevant portion of your CSV dataset.
+    Return up to 30 song recommendations based on the emotion.
     """
     data = pd.DataFrame()
     if len(emotion_list) == 1:
@@ -60,22 +59,17 @@ def get_recommendations(emotion_list):
         else:
             data = pd.concat([data, df_angry.sample(n=t)], ignore_index=True)
 
-    # Ensure columns exist for name, artist, and link
+    # Ensure columns exist
     for col in ["name", "artist", "link"]:
         if col not in data.columns:
             data[col] = ""
-
     return data[["name", "artist", "link"]]
 
 def process_emotions(emotion_list):
-    """
-    Collect the unique emotions from detected faces, 
-    then return them in a list (e.g. ["Happy", "Neutral"]).
-    """
-    emotion_counts = Counter(emotion_list)
-    return list(emotion_counts.keys())
+    """Return a list of unique emotions."""
+    return list(Counter(emotion_list).keys())
 
-# Build and load model 🤖
+# 🤖 Build and load the model
 model = Sequential()
 model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(48, 48, 1)))
 model.add(Conv2D(64, (3, 3), activation='relu'))
@@ -90,13 +84,12 @@ model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(7, activation='softmax'))
 
-# Load the pre-trained weights 💾
 try:
     model.load_weights(MODEL_PATH)
 except Exception as e:
     print("Error loading model weights:", e)
 
-# Emotion dictionary for mapping model predictions to labels
+# Mapping model output to emotion labels
 emotion_dict = {
     0: "Angry",
     1: "Disgusted",
@@ -109,45 +102,31 @@ emotion_dict = {
 
 @app.route("/")
 def index():
-    """
-    Render the index.html file from the 'templates' folder.
-    """
     return render_template("index.html")
 
 @app.route("/save_image", methods=["POST"])
 def save_image():
-    """
-    This route receives an image (image/jpeg) from the frontend,
-    detects faces and emotions, then returns any matched songs.
-    """
     try:
-        # Create a unique subfolder for each new upload ⏰
+        # ✅ Check if image data is received
+        if not request.data:
+            return jsonify({"error": "No image data received"}), 400
+
+        # 📅 Create unique folder and save image
         timestamp = int(time.time())
         upload_dir = os.path.join('uploads', f'image_{timestamp}')
         os.makedirs(upload_dir, exist_ok=True)
-
-        # Store the received image as 'uploaded.jpg'
         image_path = os.path.join(upload_dir, 'uploaded.jpg')
         with open(image_path, "wb") as f:
             f.write(request.data)
 
-        # Read the image via OpenCV
+        # 📸 Read the image and convert to grayscale
         img = cv2.imread(image_path)
         if img is None:
-            return jsonify({
-                "message": "Could not read the image.",
-                "emotion_found": None,
-                "links": []
-            }), 400
+            return jsonify({"error": "Could not read the image"}), 400
 
-        # Convert to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # Load face cascade for detecting faces
         face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         face_cascade = cv2.CascadeClassifier(face_cascade_path)
-
-        # Detect faces in the image
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
         emotion_list = []
@@ -159,7 +138,6 @@ def save_image():
             max_index = int(np.argmax(predictions))
             emotion_list.append(emotion_dict[max_index])
 
-        # Determine which emotion(s) dominated the detection
         processed = process_emotions(emotion_list)
         if len(processed) == 0:
             return jsonify({
@@ -168,14 +146,10 @@ def save_image():
                 "links": []
             })
 
-        # Take the first recognized emotion (adjust as needed)
         detected_emotion = processed[0]
-
-        # Fetch recommended tracks 🎶
         rec_data = get_recommendations([detected_emotion])
         results = []
         for link, artist, name in zip(rec_data["link"], rec_data["artist"], rec_data["name"]):
-            # Convert if it's a Spotify link
             if "spotify" in link:
                 track_id = link.split("/")[-1]
                 link = f"https://open.spotify.com/track/{track_id}"
