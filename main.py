@@ -1,6 +1,7 @@
 import os
 import time
 import cv2
+import json
 import numpy as np
 import pandas as pd
 from collections import Counter
@@ -14,7 +15,7 @@ app = Flask(__name__)
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
-# 🔍 Set paths for CSV and model files (make sure these files are in your project)
+# 🔍 Set paths for CSV and model files (ensure these files are in your project root)
 CSV_PATH = "muse_v3.csv"
 MODEL_PATH = "model.h5"
 
@@ -34,8 +35,9 @@ try:
     df_angry   = df[36000:54000]
     df_neutral = df[54000:72000]
     df_happy   = df[72000:]
+    print("✅ CSV loaded successfully!")
 except Exception as e:
-    print("Error loading CSV:", e)
+    print("❌ Error loading CSV:", e)
     df = None
 
 def get_recommendations(emotion_list):
@@ -58,7 +60,6 @@ def get_recommendations(emotion_list):
             data = pd.concat([data, df_sad.sample(n=t)], ignore_index=True)
         else:
             data = pd.concat([data, df_angry.sample(n=t)], ignore_index=True)
-
     # Ensure columns exist
     for col in ["name", "artist", "link"]:
         if col not in data.columns:
@@ -86,8 +87,9 @@ model.add(Dense(7, activation='softmax'))
 
 try:
     model.load_weights(MODEL_PATH)
+    print("✅ Model weights loaded!")
 except Exception as e:
-    print("Error loading model weights:", e)
+    print("❌ Error loading model weights:", e)
 
 # Mapping model output to emotion labels
 emotion_dict = {
@@ -107,27 +109,29 @@ def index():
 @app.route("/save_image", methods=["POST"])
 def save_image():
     try:
-        # ✅ Check if image data is received
         if not request.data:
             return jsonify({"error": "No image data received"}), 400
 
-        # 📅 Create unique folder and save image
+        # Create unique folder and save image
         timestamp = int(time.time())
         upload_dir = os.path.join('uploads', f'image_{timestamp}')
         os.makedirs(upload_dir, exist_ok=True)
         image_path = os.path.join(upload_dir, 'uploaded.jpg')
         with open(image_path, "wb") as f:
             f.write(request.data)
+        print("🖼️ Image saved at:", image_path)
 
-        # 📸 Read the image and convert to grayscale
+        # Read the image and convert to grayscale
         img = cv2.imread(image_path)
         if img is None:
             return jsonify({"error": "Could not read the image"}), 400
-
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Detect faces using Haar cascades
         face_cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         face_cascade = cv2.CascadeClassifier(face_cascade_path)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        print("🔍 Faces detected:", len(faces))
 
         emotion_list = []
         for (x, y, w, h) in faces:
@@ -159,13 +163,25 @@ def save_image():
                 "link": link
             })
 
-        return jsonify({
+        response_data = {
             "message": f"Received image. Detected emotion: {detected_emotion}",
             "emotion_found": detected_emotion,
             "links": results
-        })
+        }
+        print("✅ Response Data:", response_data)
+        return jsonify(response_data)
     except Exception as e:
+        print("❌ Exception in /save_image:", e)
         return jsonify({"error": str(e)}), 500
+
+# Custom error handlers to ensure JSON responses
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
