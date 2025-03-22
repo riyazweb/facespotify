@@ -175,14 +175,14 @@
           }
           geminiResponse.innerHTML = html;
         } else {
-          geminiResponse.innerHTML = <p class="text-gray-400 text-center text-lg">No emotion detected. Try again!</p>;
+          geminiResponse.innerHTML = `<p class="text-gray-400 text-center text-lg">No emotion detected. Try again!</p>`;
         }
 
         // Smoothly scroll to the results section
         geminiResponse.scrollIntoView({ behavior: 'smooth' });
       } catch (error) {
         spinner.classList.add('hidden');
-        geminiResponse.innerHTML = <p class="text-red-400 text-center text-lg">Error: ${error.message}</p>;
+        geminiResponse.innerHTML = `<p class="text-red-400 text-center text-lg">Error: ${error.message}</p>`;
         console.error('Submission error:', error);
       }
     });
