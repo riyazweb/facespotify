@@ -16,7 +16,7 @@ if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
 # --- CONFIGURATION ---
-CSV_PATH = "/content/spotify_tracks.csv" 
+CSV_PATH = "/content/facespotify/spotify_tracks.csv" 
 MODEL_PATH = "/content/facespotify/model.h5"
 
 LANGUAGE_MAP = {
