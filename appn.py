@@ -11,12 +11,10 @@ from pyngrok import ngrok
 
 app = Flask(__name__)
 
-# Create uploads folder if not exists
 if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
-# --- CONFIGURATION ---
-CSV_PATH = "/content/facespotify/spotify_tracks.csv" 
+CSV_PATH = "/content/facespotify/spotify_tracks.csv"
 MODEL_PATH = "/content/facespotify/model.h5"
 
 LANGUAGE_MAP = {
@@ -26,7 +24,6 @@ LANGUAGE_MAP = {
     "telugu": "telugu"
 }
 
-# --- DATA LOADING AND PREPROCESSING ---
 print("Loading and processing dataset...")
 try:
     df = pd.read_csv(CSV_PATH)
@@ -48,9 +45,7 @@ except KeyError as e:
     exit()
 
 
-# --- Get Recommendations Function (with debugging) ---
 def get_recommendations(emotion_list, language_code="hi"):
-    # (This function is kept as is from the previous version)
     print("\n" + "---" * 10)
     print("DEBUGGING INSIDE get_recommendations")
     print(f"--> Received Emotion: {emotion_list[0] if emotion_list else 'None'}")
@@ -79,7 +74,6 @@ def get_recommendations(emotion_list, language_code="hi"):
 def process_emotions(emotion_list):
     return list(Counter(emotion_list).keys())
 
-# --- Build and load model ---
 print("Loading emotion detection model...")
 model = Sequential()
 model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(48, 48, 1)))
@@ -105,8 +99,6 @@ def index():
 
 @app.route("/save_image", methods=["POST"])
 def save_image():
-    """Receive image, detect emotion, and return recommendations."""
-    # --- FIX 1: RESTORED FULL IMAGE HANDLING LOGIC ---
     timestamp = int(time.time())
     upload_dir = os.path.join('uploads', f'image_{timestamp}')
     os.makedirs(upload_dir, exist_ok=True)
@@ -116,8 +108,6 @@ def save_image():
 
     img = cv2.imread(image_path)
     
-    # --- FIX 2: ADDED CHECK FOR INVALID IMAGE ---
-    # This prevents a crash if the received data isn't a proper image.
     if img is None:
         return jsonify({
             "message": "Could not read the uploaded image. It might be corrupted.",
@@ -141,8 +131,6 @@ def save_image():
 
     processed = process_emotions(emotion_list)
     
-    # --- FIX 3: ADDED CHECK FOR NO DETECTED FACES ---
-    # This is the main fix for the 500 error. It handles the case where the `processed` list is empty.
     if not processed:
         return jsonify({
             "message": "No faces or emotions detected. Please try again.",
@@ -150,7 +138,7 @@ def save_image():
             "links": []
         })
 
-    detected_emotion = processed[0] # This line is now safe
+    detected_emotion = processed[0]
     language_name = request.headers.get("X-Language", "hindi").lower()
     language = LANGUAGE_MAP.get(language_name, "hindi")
     
@@ -169,7 +157,6 @@ def save_image():
 
 @app.route("/change_language", methods=["POST"])
 def change_language():
-    """Return updated recommendations using the stored emotion and new language."""
     data = request.get_json()
     detected_emotion = data.get("emotion")
     language_name = data.get("language", "hindi").lower()
@@ -189,8 +176,6 @@ def change_language():
  
 if __name__ == "__main__":
     ngrok.set_auth_token("2UUGMJW8gaZ7Ikrl53By3xYHdLs_6b3ipRxC3rEXwy7JgQv5Y")
-    # Make sure to use a static domain if you have a paid ngrok plan for consistency
     public_url = ngrok.connect(5000, domain="prepared-singularly-shepherd.ngrok-free.app")
     print(f"🌐 Ngrok URL: {public_url}")
-    # Set debug=False for production or when sharing the link
     app.run(debug=False, port=5000)
