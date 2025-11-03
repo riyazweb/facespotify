@@ -16,7 +16,6 @@
       <p class="text-sm text-gray-400">Your music companion</p>
     </header>
 
-    <!-- Webcam Container -->
     <div id="webcamContainer" class="relative group mb-6">
       <div class="h-64 rounded-xl overflow-hidden border-2 border-gray-800 bg-gray-950 flex items-center justify-center">
         <video id="webcam" class="w-full h-auto object-cover" autoplay playsinline muted></video>
@@ -45,7 +44,6 @@
       </div>
     </div>
 
-    <!-- --- CHANGED: Language Toggle Switch replaced with Dropdown Menu --- -->
     <div class="mb-6 w-full max-w-xs mx-auto">
       <label for="languageSelector" class="block text-sm font-medium text-gray-400 mb-2 text-center">Select Language</label>
       <select id="languageSelector" class="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -53,7 +51,6 @@
         <option value="english">English</option>
         <option value="tamil">Tamil</option>
         <option value="telugu">Telugu</option>
-        <!-- Add more languages here as needed -->
       </select>
     </div>
     
@@ -67,26 +64,20 @@
     const spinner = document.getElementById('spinner');
     const geminiResponse = document.getElementById('geminiResponse');
     const webcamPlaceholder = document.getElementById('webcamPlaceholder');
-    // --- CHANGED: Get the new language selector dropdown ---
     const languageSelector = document.getElementById('languageSelector');
 
     let currentStream;
     let usingFrontCamera = false;
-    // --- CHANGED: Default language now matches the dropdown's default value ---
     let language = "hindi"; 
     let lastDetectedEmotion = null;
 
-    // --- CHANGED: Event listener now targets the dropdown selector ---
     languageSelector.addEventListener('change', (e) => {
-      // Get the value from the selected option (e.g., "hindi", "english")
       language = e.target.value; 
-      // If emotion is already detected, update recommendations instantly
       if (lastDetectedEmotion) {
         updateLanguageRecommendations(lastDetectedEmotion, language);
       }
     });
 
-    // Initialize camera
     const initCamera = (useFront) => {
       const constraints = {
         video: { facingMode: useFront ? 'user' : 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -111,16 +102,13 @@
         });
     };
 
-    // Start with back camera
     initCamera(usingFrontCamera);
 
-    // Toggle camera
     cameraToggleButton.addEventListener('click', () => {
       usingFrontCamera = !usingFrontCamera;
       initCamera(usingFrontCamera);
     });
 
-    // Capture image from video
     function captureImage() {
       const canvas = document.createElement('canvas');
       canvas.width = videoElement.videoWidth;
@@ -132,14 +120,12 @@
       });
     }
 
-    // Update recommendations when language is toggled
     async function updateLanguageRecommendations(emotion, lang) {
       try {
         spinner.classList.remove('hidden');
         const response = await fetch('/change_language', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // The 'lang' parameter will now be "hindi", "english", etc., which is correct
           body: JSON.stringify({ emotion: emotion, language: lang })
         });
         const data = await response.json();
@@ -175,7 +161,6 @@
       }
     }
 
-    // Analyze mood and get recommendations
     submitButton.addEventListener('click', async () => {
       try {
         spinner.classList.remove('hidden');
@@ -185,7 +170,6 @@
           method: 'POST',
           headers: { 
             'Content-Type': 'image/jpeg',
-            // The 'language' variable will correctly hold "hindi", "english", etc.
             'X-Language': language
           },
           body: imageBlob
@@ -231,7 +215,6 @@
       }
     });
 
-    // Adjust viewport height for mobile devices
     let viewport = document.querySelector("meta[name=viewport]");
     viewport.setAttribute("content", viewport.content + ", height=" + window.innerHeight);
   </script>
